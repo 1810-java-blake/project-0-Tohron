@@ -1,0 +1,41 @@
+body {
+    background-size:cover;
+    background-image: url('./texas-big-bend-national-park-skies-over-desert-rocks.jpg');
+    background-color:000000;
+	background-repeat: no-repeat;
+}
+
+.message {
+    text-align: center;
+
+    width: 245px;
+    height:110px;
+    line-height: 110px;
+
+    position: absolute;
+}
+
+#label1 {
+    display: inline-block;
+    vertical-align: middle;
+    line-height: normal;
+}
+
+.basic {
+    border-style: dashed;
+    border-width: 5px;
+    opacity: 0.9;
+    background-color:rgba(76, 76, 255, 0.6);
+    border-color: #0000ff;
+}
+
+#chuck {
+    text-align: center;
+
+    width: 100px;
+    height:100px;
+    background-size:cover;
+    background-image: url('./Base.png');
+
+    position: absolute;
+}

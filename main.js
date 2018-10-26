@@ -12,6 +12,7 @@ var prev_pos = [0,0];
 var messageNumber = 2;
 var messages = []; // approaching messages
 var hit_messages = []; // messages that have been hit
+var kicked_messages = [];
 var fading_messages = []; // messages that reached the right side without being hit
 class Message {
     constructor(div, x, y, h) {
@@ -45,6 +46,12 @@ var punchCooldown = 0; // milliseconds until punch repeats
 var kickQueued = false;
 var kickInterval = 5000; // milliseconds
 var kickCooldown = 0; // milliseconds until kick is available
+
+var reputation = 20;
+var repMax = 20;
+var repTracker;
+var score = 0;
+var scoreTracker;
 
 function ajax(url, success, failure) {
     let xhr = new XMLHttpRequest();
@@ -97,6 +104,8 @@ document.addEventListener("DOMContentLoaded", function() {
     m.finalizeHeight();
     messages.push(m); // adds Message m to the end of messages
     chuck = document.getElementById("chuck");
+    repTracker = document.getElementById("repspan");
+    scoreTracker = document.getElementById("scorespan");
     //left = box1.style.left;
     body = document.body;
     html = document.documentElement;
@@ -109,15 +118,15 @@ document.addEventListener("DOMContentLoaded", function() {
         html.clientHeight, html.scrollHeight, html.offsetHeight );
         */
     jokeList.push("*Default Joke Here*")
-    SpawnMessage(); // Spawns extra message along with starting one
+    //SpawnMessage(); // Spawns extra message along with starting one
     setInterval(Update, 33); // updates game loop at 30 FPS
+    isPunching = false;
+    kickQueued = false;
 
     document.addEventListener("keypress", function(event) { // -------------- Keeps triggering as long as key down
         //console.log("Key was pressed.");
         //console.log("Pressed: " + event.charCode); // Gives number code
         //console.log("Pressed: " + event.keyCode); // Gives lowercase char, Shift and Ctrl do not trigger event!
-        isPunching = false;
-        kickQueued = false;
         if (event.key == "w") {
             //console.log("PUNCH!");
             isPunching = true;
@@ -128,6 +137,14 @@ document.addEventListener("DOMContentLoaded", function() {
         }
         if (event.key == " ") {
            // console.log("Dominate!");
+        }
+    });
+    document.addEventListener("keyup", function(event) {
+        if (event.key == "w") {
+            isPunching = false;
+        }
+        if (event.key == "a") {
+            kickQueued = false;
         }
     });
 });
@@ -163,8 +180,13 @@ function Update() {
         }
         MoveLeft();
         HandleCollision();
+
+        Fade();
+        Return();
+
         MoveChuck();
         
+        HandleAttack();
     }
 }
 
@@ -197,28 +219,130 @@ function MoveChuck() {
     c_x += chuck_move_x;
     c_y += chuck_move_y;
 
+    // Push direction dependent on signs of chuck_move_y and chuck_move_x
     
     min_y = c_y;
     max_y = c_y + 100;
-    max_x = c_x + 75;
+    max_x = prev_pos[0] + 75;
     var i;
-    for (i = 0; i < messages.length; i++) {
-        if (m.y < max_y && m.y + m.h > min_y && m.x < max_x && m.x + 245 > prev_pos[0] + 25) {
-            
+    if (chuck_move_y > 0) {
+        for (i = 0; i < messages.length; i++) {
+            m = messages[i];
+            // detects overlap
+            if (m.y < max_y && m.y + m.h > min_y && m.x < max_x && m.x + 245 > prev_pos[0] + 25) {
+                // pushes up if chuck_move_y > 0
+                max_y = m.y;
+            }
         }
+        c_y = max_y - 101;
+    } else {
+        for (i = 0; i < messages.length; i++) {
+            m = messages[i];
+            // detects overlap
+            if (m.y < max_y && m.y + m.h > min_y && m.x < max_x && m.x + 245 > prev_pos[0] + 25) {
+                // pushes down if chuck_move_y < 0
+                min_y = m.y + m.h;
+            }
+        }
+        c_y = min_y + 1;
     }
 
+
+    min_y = c_y;
+    max_y = c_y + 100;
+    max_x = c_x + 75;
     min_x = c_x + 25;
-    for (i = 0; i < messages.length; i++) {
-        if (m.y < max_y && m.y + m.h > min_y && m.x < max_x && m.x + 245 > c_x + 25) {
-            max_x = m.x;
+    if (chuck_move_x > 0) {
+        for (i = 0; i < messages.length; i++) {
+            m = messages[i];
+            // detects overlap
+            if (m.y < max_y && m.y + m.h > min_y && m.x < max_x && m.x + 245 > c_x + 25) {
+                // pushes left if chuck_move_x > 0
+                max_x = m.x;
+            }
         }
+        c_x = max_x - 75;
+    } else {
+        for (i = 0; i < messages.length; i++) {
+            m = messages[i];
+            // detects overlap
+            if (m.y < max_y && m.y + m.h > min_y && m.x < max_x && m.x + 245 > c_x + 25) {
+                // pushes right if chuck_move_x < 0
+                min_x = m.x + 245;
+            }
+        }
+        c_x = min_x - 25;
     }
+
 
     //console.log("CX: " + c_x + ", CY: " + c_y); // These are decimal numbers
     chuck.style.left  = c_x + "px";
     chuck.style.top  = c_y + "px";
 }
+
+function HandleAttack() {
+    punchCooldown -= 33;
+    kickCooldown -= 33;
+    if (kickQueued && kickCooldown <= 0 && punchCooldown < .7 * punchInterval) {
+        chuck.style.backgroundImage = "url('./Kick.png')";
+        Kick();
+        kickCooldown = kickInterval;
+    } else if (isPunching && punchCooldown <= 0 && kickCooldown < .9 * kickInterval) {
+        chuck.style.backgroundImage = "url('./Punch.png')";
+        Punch();
+        punchCooldown = punchInterval;
+    } else if (kickCooldown < .9 * kickInterval && punchCooldown < .7 * punchInterval) {
+        chuck.style.backgroundImage = "url('./Base.png')";
+    }
+
+    /*
+    if (isPunching) {
+        if (punchCooldown <= 0 && kickCooldown < .9 * kickInterval) {
+            Punch();
+            punchCooldown = punchInterval;
+        }
+
+        if (punchCooldown >= .7 * punchInterval) {
+            chuck.style.backgroundImage = "url('./Punch.png')";
+        } else if (kickCooldown <= 0 && kickQueued) {
+            Kick();
+            kickCooldown = kickInterval;
+        } else {
+            chuck.style.backgroundImage = "url('./Base.png')";
+        }
+    }
+    */
+}
+
+function Punch() {
+    var c_x = parseInt(chuck.style.left, 10) + 85; // 35px to the right of center
+    var c_y = parseInt(chuck.style.top, 10) + 50;
+    for (var i = 0; i < messages.length; i++) {
+        var m = messages[i];
+        if (m.y < c_y && m.y + m.h > c_y && m.x < c_x && m.x + 245 > c_x) {
+            console.log("Punched!"); // unclear if knockback cause
+            messages[i].div.className = "message hit";
+            hit_messages.push(messages[i]);
+            messages.splice(i, 1);
+            return;
+        }
+    }
+}
+function Kick() {
+    var c_x = parseInt(chuck.style.left, 10) + 100; // 50px to the right of center
+    var c_y = parseInt(chuck.style.top, 10) + 50;
+    for (var i = 0; i < messages.length; i++) {
+        var m = messages[i];
+        if (m.y < c_y && m.y + m.h > c_y && m.x < c_x && m.x + 245 > c_x) {
+            console.log("Kicked!"); // unclear if knockback cause
+            messages[i].div.className = "message kicked";
+            kicked_messages.push(messages[i]);
+            messages.splice(i, 1);
+            return;
+        }
+    }
+}
+
 // Moves Chuck left (after messages move) if needed
 function HandleCollision() {
     var c_x = parseInt(chuck.style.left, 10) + 75; // using 50x100 collision box
@@ -234,6 +358,7 @@ function HandleCollision() {
         //var m_h = parseInt(messages[i].style.lineHeight, 10);
         if (m.y < max_y && m.y + m.h > min_y && m.x < max_x && m.x + 245 > c_x - 50) {
             max_x = m.x;
+            console.log("Move Collision"); // unclear if knockback cause
         }
     }
     c_x = max_x - 75;
@@ -272,7 +397,7 @@ function SpawnMessage() {
     var h = (90 + joke.length / 2) + "px";
     message.innerHTML = "<span id = \"label1\">" + joke + "</span>";
 
-    var m = new Message(message, width, 60 + Math.random() * (height - 180), 90 + joke.length / 2);
+    var m = new Message(message, width, 40 + Math.random() * (height - 180), 90 + joke.length / 2);
     
     //message.style.left = width + "px";
     //message.style.top = (70 + Math.random() * (height - 140) + "px");
@@ -288,7 +413,7 @@ function SpawnMessage() {
     //message.setAttribute("style","lineHeight:" + h);  // also doesn't work, and also resets positions to 0
     //message.height = h;
     //message.lineHeight = h;
-    console.log("Message height: " + m.h);
+    //console.log("Message height: " + m.h);
     //var body = document.getElementsByTagName("body")[0];
     var body = document.getElementById("holder");
     body.appendChild(message);
@@ -309,10 +434,17 @@ function MoveLeft() {
         //messages[i].x = left + "px";
         messages[i].finalizePos();
 
-        if (left < messages[i].div.width / 2) {
+        if (messages[i].x < 0) {
+            messages[i].div.style.opacity = 1.0;
             fading_messages.push(messages[i]);
             messages.splice(i, 1);
             i--; // adjusts index back now that message was removed
+            reputation--;
+            repTracker.innerHTML = "<strong>Reputation: " + reputation + " / " + repMax + "</strong>";
+            if (reputation <= 0) {
+                window.location = "./gameover.html";
+                return;
+            }
         }
     }
     
@@ -321,13 +453,39 @@ function MoveLeft() {
 }
 
 function Fade() {
+    var body = document.getElementById("holder");
     for (var i = 0; i < fading_messages.length; i++) {
-
+        //var opacity = fading_messages[i].div.style.opacity;
+        //opacity -= .04;
+        //console.log("Opacity: " + opacity);
+        fading_messages[i].div.style.opacity -= .04;
+        if (fading_messages[i].div.style.opacity <= 0) {
+            body.removeChild(fading_messages[i].div);
+            fading_messages.splice(i, 1);
+            i--;
+        }
     }
 }
 
 function Return() {
-    for (var i = 0; i < hit_messages.length; i++) {
-
+    var i;
+    var body = document.getElementById("holder");
+    for (i = 0; i < hit_messages.length; i++) {
+        hit_messages[i].x += 3;
+        hit_messages[i].finalizePos();
+        if (hit_messages[i].x > width) {
+            body.removeChild(hit_messages[i].div);
+            hit_messages.splice(i, 1);
+            i--;
+        }
+    }
+    for (i = 0; i < kicked_messages.length; i++) {
+        kicked_messages[i].x += 6;
+        kicked_messages[i].finalizePos();
+        if (kicked_messages[i].x > width) {
+            body.removeChild(kicked_messages[i].div);
+            kicked_messages.splice(i, 1);
+            i--;
+        }
     }
 }

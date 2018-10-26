@@ -13,7 +13,7 @@ body {
     width: 245px;
     /*height:110px;*/
     /*line-height: 110px;*/
-    opacity: 1.0;
+    /*opacity: 1.0;*/
 
     position: absolute;
 }
@@ -45,6 +45,19 @@ body {
     border-color: #bb00ff;
 }
 
+.hit {
+    border-style: dashed;
+    border-width: 4px;
+    background-color:rgba(122, 122, 122, 0.4);
+    border-color: #444444;
+}
+.kicked {
+    border-style: dashed;
+    border-width: 6px;
+    background-color:rgba(255, 00, 00, 0.4);
+    border-color: #990000;
+}
+
 #chuck {
     text-align: center;
 
@@ -55,4 +68,41 @@ body {
 
     z-index: 10;
     position: absolute;
+}
+
+#rep {
+    position: absolute;
+    text-align: center;
+    font-size: 25px;
+    bottom: 40px;
+    left: 190px;
+    background-color: #6688ff;    
+    height: 60px;
+    line-height: 50px;
+    width: 260px;
+    z-index: 20;
+}
+#repspan {
+    display: inline-block;
+    vertical-align: middle;
+    line-height: normal;
+}
+
+#score {
+    position: absolute;
+    text-align: center;
+    font-size: 45px;
+    color: #ffffff;
+    bottom: 40px;
+    left: 20px;
+    background-color: #2222ff;    
+    height: 100px;
+    line-height: 80px;
+    width: 140px;
+    z-index: 20;
+}
+#scorespan {
+    display: inline-block;
+    vertical-align: middle;
+    line-height: normal;
 }

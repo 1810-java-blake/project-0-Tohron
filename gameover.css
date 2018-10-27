@@ -1,0 +1,16 @@
+body {
+    background-size:cover;
+    background-image: url('./texas-big-bend-national-park-skies-over-desert-rocks.jpg');
+    background-color:#ffaa44;
+    background-repeat: no-repeat;
+    
+    overflow: hidden;
+}
+
+.center {
+    display: block;
+    margin-top: 60px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 50%;
+}

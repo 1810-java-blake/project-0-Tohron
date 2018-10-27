@@ -7,6 +7,15 @@ body {
     overflow: hidden;
 }
 
+#holder {
+    position: absolute;
+    background-color:rgba(255, 0, 0, 0.0);
+    bottom: 0px;
+    right: 0px;  
+    left: 0px;
+    top: 0px;
+}
+
 .message {
     text-align: center;
 
@@ -75,8 +84,8 @@ body {
     text-align: center;
     font-size: 25px;
     bottom: 40px;
-    left: 190px;
-    background-color: #6688ff;    
+    left: 190px;  
+    background-image: url('./RepBar.png');
     height: 60px;
     line-height: 50px;
     width: 260px;
@@ -95,9 +104,9 @@ body {
     color: #ffffff;
     bottom: 40px;
     left: 20px;
-    background-color: #2222ff;    
+    background-image: url('./ScoreHolder.png');
     height: 140px;
-    line-height: 80px;
+    line-height: 110px;
     width: 140px;
     z-index: 20;
 }
@@ -111,7 +120,7 @@ body {
     position: absolute;
     bottom: 40px;
     right: 20px;
-    background-color: #005500;    
+    background-image: url('./DomBack.png');  
     height: 254px;
     width: 40px;
     z-index: 20;
@@ -119,8 +128,8 @@ body {
 #dom_front {
     position: absolute;
     bottom: 2px;
-    right: 2px;
-    background-color: #11ff11;    
+    right: 2px;  
+    background-image: url('./DomBar.png');
     height: 0px;
     width: 36px;
     z-index: 22;

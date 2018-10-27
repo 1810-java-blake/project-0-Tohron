@@ -108,7 +108,7 @@ document.addEventListener("mousemove", event => {
 
 var box1;
 var left;
-var body, html;
+var body, html, holder;
 var width;
 var height;
 document.addEventListener("DOMContentLoaded", function() {
@@ -122,6 +122,7 @@ document.addEventListener("DOMContentLoaded", function() {
     repTracker = document.getElementById("repspan");
     scoreTracker = document.getElementById("scorespan");
     domTracker = document.getElementById("dom_front");
+    holder = document.getElementById("holder");
     //left = box1.style.left;
     body = document.body;
     html = document.documentElement;
@@ -139,7 +140,7 @@ document.addEventListener("DOMContentLoaded", function() {
     isPunching = false;
     kickQueued = false;
 
-    document.addEventListener("keypress", function(event) { // -------------- Keeps triggering as long as key down
+    document.addEventListener("keypress", function(event) {
         //console.log("Key was pressed.");
         //console.log("Pressed: " + event.charCode); // Gives number code
         //console.log("Pressed: " + event.keyCode); // Gives lowercase char, Shift and Ctrl do not trigger event!
@@ -155,6 +156,7 @@ document.addEventListener("DOMContentLoaded", function() {
             // console.log("Dominate!");
             if (domination >= dom_max) {
                 domination_mode = true;
+                holder.style.backgroundColor = "rgba(255, 0, 0, 0.6)";
                 chuck_speed = 40 + 8 * level;
                 b_move = parseInt(.25 * base_move + level);
                 i_move = parseInt(.375 * (base_move + level));
@@ -193,6 +195,7 @@ function Update() {
             }
             if (domination <= 0) {
                 domination_mode = false;
+                holder.style.backgroundColor = "rgba(255, 0, 0, 0.0)";
                 chuck_speed = 8 + 4 * level;
                 b_move = base_move + level;
                 i_move = parseInt(1.5 * (base_move + level));
@@ -481,8 +484,8 @@ function SpawnMessage() {
     //message.lineHeight = h;
     //console.log("Message height: " + m.h);
     //var body = document.getElementsByTagName("body")[0];
-    var body = document.getElementById("holder");
-    body.appendChild(message);
+    var holder = document.getElementById("holder");
+    holder.appendChild(message);
     //var text = document.getElementById("label1");
     //text.innerHTML = jokeList.shift();
     messageNumber++;
@@ -527,14 +530,14 @@ function MoveLeft() {
 }
 
 function Fade() {
-    var body = document.getElementById("holder");
+    //var holder = document.getElementById("holder");
     for (var i = 0; i < fading_messages.length; i++) {
         //var opacity = fading_messages[i].div.style.opacity;
         //opacity -= .04;
         //console.log("Opacity: " + opacity);
         fading_messages[i].div.style.opacity -= .04;
         if (fading_messages[i].div.style.opacity <= 0) {
-            body.removeChild(fading_messages[i].div);
+            holder.removeChild(fading_messages[i].div);
             fading_messages.splice(i, 1);
             i--;
         }
@@ -543,12 +546,12 @@ function Fade() {
 
 function Return() {
     var i;
-    var body = document.getElementById("holder");
+    //var holder = document.getElementById("holder");
     for (i = 0; i < hit_messages.length; i++) {
         hit_messages[i].x += 3;
         hit_messages[i].finalizePos();
         if (hit_messages[i].x > width) {
-            body.removeChild(hit_messages[i].div);
+            holder.removeChild(hit_messages[i].div);
             hit_messages.splice(i, 1);
             i--;
         }
@@ -573,7 +576,7 @@ function Return() {
             }
         }
         if (k.x > width) {
-            body.removeChild(k.div);
+            holder.removeChild(k.div);
             kicked_messages.splice(i, 1);
             i--;
         }

@@ -119,6 +119,7 @@ document.addEventListener("DOMContentLoaded", function() {
     messages.push(m); // adds Message m to the end of messages
     */
     chuck = document.getElementById("chuck");
+    kickBar = document.getElementById("kickfront");
     repTracker = document.getElementById("repspan");
     scoreTracker = document.getElementById("scorespan");
     domTracker = document.getElementById("dom_front");
@@ -343,6 +344,7 @@ function MoveChuck() {
 function HandleAttack() {
     punchCooldown -= 33;
     kickCooldown -= 33;
+    
     if (kickQueued && kickCooldown <= 0 && punchCooldown < .7 * punchInterval) {
         chuck.style.backgroundImage = "url('./Kick.png')";
         Kick();
@@ -354,6 +356,11 @@ function HandleAttack() {
     } else if (kickCooldown < .9 * kickInterval && punchCooldown < .7 * punchInterval) {
         chuck.style.backgroundImage = "url('./Base.png')";
     }
+    var barWidth = 85 * (1 -kickCooldown / kickInterval);
+    if (barWidth > 85) {
+        barWidth = 85;
+    }
+    kickBar.style.width = barWidth + "px";
 }
 
 function Punch() {

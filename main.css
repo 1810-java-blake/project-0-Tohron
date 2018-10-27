@@ -134,3 +134,22 @@ body {
     width: 36px;
     z-index: 22;
 }
+
+#kickback {
+    position: absolute;
+    bottom: -4px;
+    left: 5px;
+    right: 5px;
+    background-color: #510000;  
+    height: 8px;
+    z-index: 12;
+}
+#kickfront {
+    position: absolute;
+    bottom: -3px;
+    left: 7px;
+    width: 85px;
+    background-color: #ff0000;
+    height: 6px;
+    z-index: 14;
+}

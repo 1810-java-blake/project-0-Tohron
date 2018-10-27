@@ -59,6 +59,7 @@ var repTracker;
 var score = 0;
 var scoreTracker;
 var level = 1;
+var scoreThreshhold = 4000;
 var domination = 0;
 var dom_max = 500;
 
@@ -196,7 +197,21 @@ function Update() {
 }
 
 function CheckLevel() {
+    if (score > scoreThreshhold) {
+        level++;
+        scoreThreshhold += 4000 * level;
+        chuck_speed = 8 + 2 * level;
+        b_move = base_move + level;
+        i_move = parseInt(1.5 * (base_move + level));
+        a_move = 2 * (base_move + level);
 
+        repMax += 5;
+        reputation += .2 * repMax;
+        if (reputation > repMax) {
+            reputation = repMax;
+        }
+        repTracker.innerHTML = "<strong>Reputation: " + reputation + " / " + repMax + "</strong>";
+    }
 }
 
 function SetChuckVector() {

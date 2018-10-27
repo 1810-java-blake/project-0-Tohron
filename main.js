@@ -2,6 +2,11 @@ var mouse_x = 0;
 var mouse_y = 0;
 var mouse_moved = false;
 
+var base_move = 3;
+var b_move = 3;
+var i_move = 4; // 50% more than base
+var a_move = 6; // 100% more than base
+
 var chuck;
 var chuck_half_width = 50;
 var chuck_speed = 8.0;
@@ -15,11 +20,12 @@ var hit_messages = []; // messages that have been hit
 var kicked_messages = [];
 var fading_messages = []; // messages that reached the right side without being hit
 class Message {
-    constructor(div, x, y, h) {
+    constructor(div, x, y, h, s_val) {
         this.div = div;
         this.x = x;
         this.y = y;
         this.h = h;
+        this.s_val = s_val;
     }
     finalizePos() {
         this.div.style.left = this.x + "px";
@@ -52,6 +58,9 @@ var repMax = 20;
 var repTracker;
 var score = 0;
 var scoreTracker;
+var level = 1;
+var domination = 0;
+var dom_max = 500;
 
 function ajax(url, success, failure) {
     let xhr = new XMLHttpRequest();
@@ -99,10 +108,12 @@ var body, html;
 var width;
 var height;
 document.addEventListener("DOMContentLoaded", function() {
+    /*
     box1 = document.getElementById("message1");
     var m = new Message(box1, parseInt(box1.style.left, 10), parseInt(box1.style.top, 10), 110);
     m.finalizeHeight();
     messages.push(m); // adds Message m to the end of messages
+    */
     chuck = document.getElementById("chuck");
     repTracker = document.getElementById("repspan");
     scoreTracker = document.getElementById("scorespan");
@@ -156,6 +167,7 @@ document.addEventListener("DOMContentLoaded", function() {
 function Update() {
     width = window.innerWidth
     height = window.innerHeight;
+    CheckLevel();
     //console.log("Bounds: " + width + ", " + height);
     if (jokeList.length < 10 && !gettingJokes) {
         AddJokes();
@@ -163,16 +175,9 @@ function Update() {
     }
     if (jokeList.length > 0) {
         //console.log("X: " + mouse_x + ", Y: " + mouse_y); // works
-        //console.log(box); // is found
-        //console.log(box1.style.left  ); // PROBLEM: Blank
         if (Math.random() > .98) {
-            //console.log(Math.random()); // is reached
             SpawnMessage();
         }
-        //left = parseInt(box1.style.left, 10);
-        //left -= 1;
-        //console.log(left);
-        //box1.style.left  = left + "px";
 
         if (mouse_moved) {
             SetChuckVector();
@@ -188,6 +193,10 @@ function Update() {
         
         HandleAttack();
     }
+}
+
+function CheckLevel() {
+
 }
 
 function SetChuckVector() {
@@ -294,24 +303,6 @@ function HandleAttack() {
     } else if (kickCooldown < .9 * kickInterval && punchCooldown < .7 * punchInterval) {
         chuck.style.backgroundImage = "url('./Base.png')";
     }
-
-    /*
-    if (isPunching) {
-        if (punchCooldown <= 0 && kickCooldown < .9 * kickInterval) {
-            Punch();
-            punchCooldown = punchInterval;
-        }
-
-        if (punchCooldown >= .7 * punchInterval) {
-            chuck.style.backgroundImage = "url('./Punch.png')";
-        } else if (kickCooldown <= 0 && kickQueued) {
-            Kick();
-            kickCooldown = kickInterval;
-        } else {
-            chuck.style.backgroundImage = "url('./Base.png')";
-        }
-    }
-    */
 }
 
 function Punch() {
@@ -320,7 +311,10 @@ function Punch() {
     for (var i = 0; i < messages.length; i++) {
         var m = messages[i];
         if (m.y < c_y && m.y + m.h > c_y && m.x < c_x && m.x + 245 > c_x) {
-            console.log("Punched!"); // unclear if knockback cause
+            console.log("Punched!");
+            score += messages[i].s_val;
+            domination += messages[i].s_val;
+            AddScore();
             messages[i].div.className = "message hit";
             hit_messages.push(messages[i]);
             messages.splice(i, 1);
@@ -334,12 +328,22 @@ function Kick() {
     for (var i = 0; i < messages.length; i++) {
         var m = messages[i];
         if (m.y < c_y && m.y + m.h > c_y && m.x < c_x && m.x + 245 > c_x) {
-            console.log("Kicked!"); // unclear if knockback cause
+            console.log("Kicked!");
+            score += 2 * messages[i].s_val;
+            domination += messages[i].s_val;
+            AddScore();
             messages[i].div.className = "message kicked";
             kicked_messages.push(messages[i]);
             messages.splice(i, 1);
             return;
         }
+    }
+}
+
+function AddScore() {
+    scoreTracker.innerHTML = "<strong>Score<br>" + score + "</strong>";
+    if (domination > dom_max) {
+        domination = dom_max;
     }
 }
 
@@ -358,7 +362,7 @@ function HandleCollision() {
         //var m_h = parseInt(messages[i].style.lineHeight, 10);
         if (m.y < max_y && m.y + m.h > min_y && m.x < max_x && m.x + 245 > c_x - 50) {
             max_x = m.x;
-            console.log("Move Collision"); // unclear if knockback cause
+            //console.log("Move Collision"); // unclear if knockback cause
         }
     }
     c_x = max_x - 75;
@@ -385,19 +389,24 @@ function AddJokes() {
 function SpawnMessage() {
     var message = document.createElement("div");
     message.id = "message" +  + messageNumber;
+    var s_val = 0;
     var result = Math.random();
     if (result > .8) {
         message.className = "message advanced";
+        s_val += 80;
     } else if (result > .5) {
         message.className = "message intermediate";
+        s_val += 50;
     } else {
         message.className = "message basic"; // Modify later for types other than 'basic'
+        s_val += 20;
     }
     var joke = jokeList.shift();
+    s_val += parseInt(joke.length / 4);
     var h = (90 + joke.length / 2) + "px";
     message.innerHTML = "<span id = \"label1\">" + joke + "</span>";
 
-    var m = new Message(message, width, 40 + Math.random() * (height - 180), 90 + joke.length / 2);
+    var m = new Message(message, width, 40 + Math.random() * (height - 180), 90 + joke.length / 2, s_val);
     
     //message.style.left = width + "px";
     //message.style.top = (70 + Math.random() * (height - 140) + "px");
@@ -430,13 +439,21 @@ function SpawnMessage() {
 function MoveLeft() {
     for (var i = 0; i < messages.length; i++) {
         //var left = parseInt(messages[i].style.left, 10);
-        messages[i].x -= 2;
+        var m = messages[i];
+        if (m.div.classList.contains("advanced")) {
+            m.x -= a_move;
+        } else  if (m.div.classList.contains("intermediate")) {
+            m.x -= i_move;
+        } else {
+            m.x -= b_move;
+        }
+        //m.x -= 2;
         //messages[i].x = left + "px";
-        messages[i].finalizePos();
+        m.finalizePos();
 
-        if (messages[i].x < 0) {
-            messages[i].div.style.opacity = 1.0;
-            fading_messages.push(messages[i]);
+        if (m.x < 0) {
+            m.div.style.opacity = 1.0;
+            fading_messages.push(m);
             messages.splice(i, 1);
             i--; // adjusts index back now that message was removed
             reputation--;
@@ -480,10 +497,25 @@ function Return() {
         }
     }
     for (i = 0; i < kicked_messages.length; i++) {
-        kicked_messages[i].x += 6;
-        kicked_messages[i].finalizePos();
-        if (kicked_messages[i].x > width) {
-            body.removeChild(kicked_messages[i].div);
+        var k = kicked_messages[i];
+        k.x += 6;
+        k.finalizePos();
+        for (var j = 0; j < messages.length; j++) {
+            var m = messages[j];
+            if (Math.abs(k.x - m.x) < 245 && Math.abs(k.y - m.y) < (k.h + m.h) / 2) { // -- issue: includes much lower messages!!!
+                console.log("Y Values: " + k.y + ", " + m.y); // m.y seems much too close
+                console.log("Comparing: " + Math.abs(k.y - m.y) + " < " + (k.h + m.h) / 2); // y difference too small!!!!
+                score += messages[j].s_val;
+                domination += messages[j].s_val;
+                AddScore();
+                messages[j].div.className = "message hit";
+                hit_messages.push(messages[j]);
+                messages.splice(j, 1);
+                j--;
+            }
+        }
+        if (k.x > width) {
+            body.removeChild(k.div);
             kicked_messages.splice(i, 1);
             i--;
         }

@@ -59,9 +59,12 @@ var repTracker;
 var score = 0;
 var scoreTracker;
 var level = 1;
+var spawn_threshhold = .98;
 var scoreThreshhold = 4000;
 var domination = 0;
-var dom_max = 500;
+var dom_max = 1000;
+var domTracker;
+var domination_mode = false;
 
 function ajax(url, success, failure) {
     let xhr = new XMLHttpRequest();
@@ -118,6 +121,7 @@ document.addEventListener("DOMContentLoaded", function() {
     chuck = document.getElementById("chuck");
     repTracker = document.getElementById("repspan");
     scoreTracker = document.getElementById("scorespan");
+    domTracker = document.getElementById("dom_front");
     //left = box1.style.left;
     body = document.body;
     html = document.documentElement;
@@ -148,7 +152,14 @@ document.addEventListener("DOMContentLoaded", function() {
             kickQueued = true;
         }
         if (event.key == " ") {
-           // console.log("Dominate!");
+            // console.log("Dominate!");
+            if (domination >= dom_max) {
+                domination_mode = true;
+                chuck_speed = 40 + 8 * level;
+                b_move = parseInt(.25 * base_move + level);
+                i_move = parseInt(.375 * (base_move + level));
+                a_move = parseInt(.5 * (base_move + level));
+            }
         }
     });
     document.addEventListener("keyup", function(event) {
@@ -176,7 +187,21 @@ function Update() {
     }
     if (jokeList.length > 0) {
         //console.log("X: " + mouse_x + ", Y: " + mouse_y); // works
-        if (Math.random() > .98) {
+        if (domination_mode) {
+            if (domination > dom_max) {
+                domination = dom_max;
+            }
+            if (domination <= 0) {
+                domination_mode = false;
+                chuck_speed = 8 + 4 * level;
+                b_move = base_move + level;
+                i_move = parseInt(1.5 * (base_move + level));
+                a_move = 2 * (base_move + level);
+            }
+            domination -= dom_max/150.0; // per 33 milliseconds, depletes from 1000 in 5 seconds
+            UpdateDomination();
+        }
+        if (Math.random() > spawn_threshhold) {
             SpawnMessage();
         }
 
@@ -200,11 +225,19 @@ function CheckLevel() {
     if (score > scoreThreshhold) {
         level++;
         scoreThreshhold += 4000 * level;
-        chuck_speed = 8 + 2 * level;
-        b_move = base_move + level;
-        i_move = parseInt(1.5 * (base_move + level));
-        a_move = 2 * (base_move + level);
+        if (domination_mode) {
+            chuck_speed = 40 + 8 * level;
+            b_move = parseInt(.25 * base_move + level);
+            i_move = parseInt(.375 * (base_move + level));
+            a_move = parseInt(.5 * (base_move + level));
+        } else {
+            chuck_speed = 8 + 4 * level;
+            b_move = base_move + level;
+            i_move = parseInt(1.5 * (base_move + level));
+            a_move = 2 * (base_move + level);
+        }
 
+        spawn_threshhold -= .01;
         repMax += 5;
         reputation += .2 * repMax;
         if (reputation > repMax) {
@@ -329,6 +362,7 @@ function Punch() {
             console.log("Punched!");
             score += messages[i].s_val;
             domination += messages[i].s_val;
+            UpdateDomination();
             AddScore();
             messages[i].div.className = "message hit";
             hit_messages.push(messages[i]);
@@ -346,6 +380,7 @@ function Kick() {
             console.log("Kicked!");
             score += 2 * messages[i].s_val;
             domination += messages[i].s_val;
+            UpdateDomination();
             AddScore();
             messages[i].div.className = "message kicked";
             kicked_messages.push(messages[i]);
@@ -360,6 +395,13 @@ function AddScore() {
     if (domination > dom_max) {
         domination = dom_max;
     }
+}
+
+function UpdateDomination() {
+    if (domination > dom_max) {
+        domination = dom_max;
+    }
+    domTracker.style.height = (250 * domination / dom_max) + "px";
 }
 
 // Moves Chuck left (after messages move) if needed
@@ -522,6 +564,7 @@ function Return() {
                 console.log("Comparing: " + Math.abs(k.y - m.y) + " < " + (k.h + m.h) / 2); // y difference too small!!!!
                 score += messages[j].s_val;
                 domination += messages[j].s_val;
+                UpdateDomination();
                 AddScore();
                 messages[j].div.className = "message hit";
                 hit_messages.push(messages[j]);

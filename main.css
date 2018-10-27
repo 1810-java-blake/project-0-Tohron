@@ -106,3 +106,22 @@ body {
     vertical-align: middle;
     line-height: normal;
 }
+
+#dom_back {
+    position: absolute;
+    bottom: 40px;
+    right: 20px;
+    background-color: #005500;    
+    height: 254px;
+    width: 40px;
+    z-index: 20;
+}
+#dom_front {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    background-color: #11ff11;    
+    height: 0px;
+    width: 36px;
+    z-index: 22;
+}

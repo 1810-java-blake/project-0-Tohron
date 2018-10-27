@@ -1,0 +1,3 @@
+Punch: "W" key
+Roundhouse Kick: "A" key
+Activate Domination Mode: Space Bar

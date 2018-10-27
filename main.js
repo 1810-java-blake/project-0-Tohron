@@ -66,6 +66,19 @@ var dom_max = 1000;
 var domTracker;
 var domination_mode = false;
 
+var punchSound = [new Audio('Punch.wav'), new Audio('Punch.wav'), new Audio('Punch.wav')];
+var punchSoundIndex = 0;
+var kickSound = new Audio('Kick.wav');
+var missSound = [new Audio('Miss.wav'), new Audio('Miss.wav'), new Audio('Miss.wav')];
+var missSoundIndex = 0;
+var domSound = new Audio('Domination.wav');
+domSound.addEventListener('ended', function() {
+    if (domination_mode) {
+        this.currentTime = 0;
+        this.play();
+    }
+}, false);
+
 function ajax(url, success, failure) {
     let xhr = new XMLHttpRequest();
 
@@ -162,6 +175,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 b_move = parseInt(.25 * base_move + level);
                 i_move = parseInt(.375 * (base_move + level));
                 a_move = parseInt(.5 * (base_move + level));
+                domSound.play();
             }
         }
     });
@@ -377,6 +391,11 @@ function Punch() {
             messages[i].div.className = "message hit";
             hit_messages.push(messages[i]);
             messages.splice(i, 1);
+            punchSound[punchSoundIndex].play();
+            punchSoundIndex++;
+            if (punchSoundIndex > 2) {
+                punchSoundIndex = 0;
+            }
             return;
         }
     }
@@ -395,6 +414,7 @@ function Kick() {
             messages[i].div.className = "message kicked";
             kicked_messages.push(messages[i]);
             messages.splice(i, 1);
+            kickSound.play();
             return;
         }
     }
@@ -528,6 +548,11 @@ function MoveLeft() {
             if (reputation <= 0) {
                 window.location = "./gameover.html";
                 return;
+            }
+            missSound[missSoundIndex].play();
+            missSoundIndex++;
+            if (missSoundIndex > 2) {
+                missSoundIndex = 0;
             }
         }
     }
